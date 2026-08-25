@@ -11,9 +11,6 @@
   const S = globalThis.CtxStorage;
   const $ = (sel) => document.querySelector(sel);
 
-  const TIPS_KEY = "tipsDismissed";
-  const SLOT_COUNT = 5;
-
   let state = { destinations: [] };
 
   const termEl = $("#term");
@@ -126,53 +123,6 @@
     }
   }
 
-  // ---- Tip card ----
-
-  // Read the live bindings once. The user may have rebound or cleared any of
-  // them, and Chrome silently drops a suggested key that clashes with its own.
-  async function loadShortcuts() {
-    let cmds = [];
-    try {
-      cmds = await chrome.commands.getAll();
-    } catch (_) {
-      return;
-    }
-    const slotKeys = Array.from({ length: SLOT_COUNT }, (_, i) => {
-      const c = cmds.find((x) => x.name === `quick-search-${i + 1}`);
-      return c && c.shortcut ? c.shortcut : "";
-    });
-
-    const open = cmds.find((c) => c.name === "_execute_action");
-    $("#tip-key").textContent = open && open.shortcut ? open.shortcut : "the toolbar icon";
-
-    // Only pitch the quick-search tip if at least one slot is actually bound.
-    const bound = slotKeys.filter(Boolean);
-    const line = $("#tip-slots");
-    if (bound.length) {
-      line.querySelector(".keys").textContent = bound.join(" / ");
-    } else {
-      line.hidden = true;
-    }
-  }
-
-  async function renderTip() {
-    const dismissed = await new Promise((r) =>
-      chrome.storage.local.get(TIPS_KEY, (v) => r(!!v[TIPS_KEY]))
-    );
-    if (dismissed || !state.destinations.length) return;
-    $("#tip").hidden = false;
-  }
-
-  $("#tip-close").addEventListener("click", () => {
-    chrome.storage.local.set({ [TIPS_KEY]: true });
-    $("#tip").hidden = true;
-  });
-
-  $("#tip-more").addEventListener("click", (e) => {
-    e.preventDefault();
-    openSettings();
-  });
-
   $("#shortcuts-tip-link").addEventListener("click", (e) => {
     e.preventDefault();
     openSettings();
@@ -183,9 +133,7 @@
   (async () => {
     state = await S.seedDefaultsIfEmpty();
     if (!state.destinations) state.destinations = [];
-    await loadShortcuts();
     renderSearch();
-    await renderTip();
     if (state.destinations.length) {
       termEl.focus();
       await prefillFromSelection();

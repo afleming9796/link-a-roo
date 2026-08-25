@@ -50,7 +50,8 @@ async function doRebuildContextMenus() {
 // companion extension, but the search terms it had already written stayed in
 // local storage. The extension has no use for them and claims to keep no
 // search history, so clear them out rather than carrying them forever.
-const LEGACY_KEYS = ["lastSearch", "visibility", "panelSlots"];
+// "tipsDismissed" joined the list when the onboarding tip card was removed.
+const LEGACY_KEYS = ["lastSearch", "visibility", "panelSlots", "tipsDismissed"];
 
 function purgeLegacyKeys() {
   // Removing absent keys is a no-op, so this is safe to run repeatedly.
