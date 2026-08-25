@@ -11,7 +11,13 @@
   const S = globalThis.CtxStorage;
   const $ = (sel) => document.querySelector(sel);
 
+  // Deliberately NOT "tipsDismissed" — that key belonged to the old onboarding
+  // card and is on the legacy purge list, so reusing it would wipe this on the
+  // next startup and hide the tip from people who never dismissed it.
+  const TIP_KEY = "panelTipDismissed";
+
   let state = { destinations: [] };
+  let tipDismissed = false;
 
   const termEl = $("#term");
   const destButtonsEl = $("#dest-buttons");
@@ -49,7 +55,7 @@
     const has = state.destinations.length > 0;
     searchEmptyEl.hidden = has;
     destButtonsEl.hidden = !has;
-    $("#shortcuts-tip").hidden = !has;
+    $("#shortcuts-tip").hidden = !has || tipDismissed;
     termEl.disabled = !has;
 
     state.destinations.forEach((dest) => {
@@ -128,11 +134,20 @@
     openSettings();
   });
 
+  $("#shortcuts-tip-close").addEventListener("click", () => {
+    tipDismissed = true;
+    chrome.storage.local.set({ [TIP_KEY]: true });
+    $("#shortcuts-tip").hidden = true;
+  });
+
   // ---- Init ----
 
   (async () => {
     state = await S.seedDefaultsIfEmpty();
     if (!state.destinations) state.destinations = [];
+    tipDismissed = await new Promise((r) =>
+      chrome.storage.local.get(TIP_KEY, (v) => r(!!v[TIP_KEY]))
+    );
     renderSearch();
     if (state.destinations.length) {
       termEl.focus();
