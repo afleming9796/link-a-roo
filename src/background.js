@@ -115,11 +115,7 @@ async function quickSearch(tabId, index) {
   const settings = await S.getSettings();
   const dest = settings.destinations && settings.destinations[index];
   if (!dest) return;
-  const [res] = await chrome.scripting.executeScript({
-    target: { tabId },
-    func: () => String(getSelection()).trim(),
-  });
-  const term = res && res.result;
+  const term = await S.readSelectionFromTab(tabId);
   if (!term) return;
   const md = dest.openMode === "new" ? "" : S.matchDomainFor(dest.urlTemplate);
   await openOrReuseTab(S.buildDestinationUrl(dest, term), md);

@@ -116,12 +116,9 @@
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       if (!tab || tab.id == null) return;
-      const [res] = await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: () => String(getSelection()).trim(),
-      });
-      if (res && res.result && !termEl.value) {
-        termEl.value = res.result;
+      const selected = await S.readSelectionFromTab(tab.id);
+      if (selected && !termEl.value) {
+        termEl.value = selected;
         autoGrow();
       }
     } catch (_) {
