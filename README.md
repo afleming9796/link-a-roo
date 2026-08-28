@@ -14,6 +14,12 @@ Link-a-roo is keyboard-first and permission-light. Nothing runs on any page unti
 
 Link-a-roo deliberately keeps no history of what you search — it just opens URLs. An early version had a remember-searches feature that was split out into a separate companion extension; updating clears any search terms it left behind in local storage.
 
+## Privacy
+
+Everything Link-a-roo stores lives in `chrome.storage.local` on your own device. It has
+no server, no analytics, and makes no network requests of its own. See
+[PRIVACY.md](PRIVACY.md).
+
 ## Permissions
 
 Link-a-roo uses `activeTab`: it can only read a page at the moment you invoke it, on that one tab, and the grant expires on navigation. There are no host permissions and no content scripts. The `tabs` permission is used solely to find an existing tab to reuse instead of opening a duplicate.
