@@ -112,20 +112,13 @@
 
   // Pull the highlighted text off the active tab. Fails harmlessly on pages we
   // can't script (chrome://, the Web Store, PDFs) — the box just starts empty.
-  async function prefillFromSelection() {
+  async function readSelection() {
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (!tab || tab.id == null) return;
-      const [res] = await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: () => String(getSelection()).trim(),
-      });
-      if (res && res.result && !termEl.value) {
-        termEl.value = res.result;
-        autoGrow();
-      }
+      if (!tab || tab.id == null) return "";
+      return await S.readSelectionFromTab(tab.id);
     } catch (_) {
-      /* not scriptable — leave the box empty */
+      return ""; /* not scriptable */
     }
   }
 
@@ -143,15 +136,28 @@
   // ---- Init ----
 
   (async () => {
+    // Grab the selection first, and let the storage reads run alongside it.
+    //
+    // Opening the panel takes focus off the page, and transient page UI —
+    // hovercards, menus, autocomplete — often tears itself down at that moment,
+    // taking the selection with it. Reading it after two storage round-trips
+    // meant starting that race two round-trips behind.
+    const selectionPromise = readSelection();
+
     state = await S.seedDefaultsIfEmpty();
     if (!state.destinations) state.destinations = [];
     tipDismissed = await new Promise((r) =>
       chrome.storage.local.get(TIP_KEY, (v) => r(!!v[TIP_KEY]))
     );
     renderSearch();
+
+    const selected = await selectionPromise;
     if (state.destinations.length) {
       termEl.focus();
-      await prefillFromSelection();
+      if (selected && !termEl.value) {
+        termEl.value = selected;
+        autoGrow();
+      }
       termEl.select();
     }
   })();

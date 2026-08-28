@@ -104,6 +104,38 @@
     return tpl + encoded;
   }
 
+  // Read the highlighted text out of a tab.
+  //
+  // Runs in every frame we're allowed to touch, not just the top one. A
+  // selection made inside an iframe — embedded viewers, some webmail surfaces —
+  // is invisible to a top-frame-only read: window.getSelection() on the parent
+  // document returns "" while the iframe's own selection holds the text.
+  //
+  // The top frame wins when it has something, so an ordinary page behaves
+  // exactly as before; otherwise the first frame that does.
+  async function readSelectionFromTab(tabId) {
+    const read = () => String(getSelection()).trim();
+    let results;
+    try {
+      results = await chrome.scripting.executeScript({
+        target: { tabId, allFrames: true },
+        func: read,
+      });
+    } catch (_) {
+      // Some pages refuse an all-frames injection; the top frame may still work.
+      try {
+        results = await chrome.scripting.executeScript({ target: { tabId }, func: read });
+      } catch (__) {
+        return "";
+      }
+    }
+    if (!Array.isArray(results)) return "";
+    const top = results.find((r) => r && r.frameId === 0 && r.result);
+    if (top) return top.result;
+    const any = results.find((r) => r && r.result);
+    return any ? any.result : "";
+  }
+
   function uid(prefix) {
     return prefix + "-" + Math.random().toString(36).slice(2, 9);
   }
@@ -116,6 +148,7 @@
     seedDefaultsIfEmpty,
     matchDomainFor,
     buildDestinationUrl,
+    readSelectionFromTab,
     uid,
   };
 })();
