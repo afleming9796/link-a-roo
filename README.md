@@ -14,6 +14,16 @@ Link-a-roo is keyboard-first and permission-light. Nothing runs on any page unti
 
 Link-a-roo deliberately keeps no history of what you search — it just opens URLs. An early version had a remember-searches feature that was split out into a separate companion extension; updating clears any search terms it left behind in local storage.
 
+## Packaging
+
+`./package.sh` builds the Chrome Web Store upload zip into `dist/`, named from the
+version in `manifest.json`. It ships only what the extension loads — `manifest.json`,
+`icons/`, `src/`, `fonts/` — and checks that the manifest landed at the archive root,
+which the store requires.
+
+`dist/` is gitignored. It is also the place to keep store screenshots and any scratch
+files used to compose them; everything in it is reproducible.
+
 ## Privacy
 
 Everything Link-a-roo stores lives in `chrome.storage.local` on your own device. It has
