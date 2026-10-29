@@ -1,2 +1,23 @@
+# macOS
 .DS_Store
+._*
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Chrome extension packaging.
+# A .pem is the private key Chrome generates when you pack an extension —
+# committing one lets anyone publish updates under your extension's identity.
+*.crx
+*.pem
+
+# Build artifacts and store assets: the upload zip, screenshots, and whatever
+# scratch HTML was used to compose them. Everything here is reproducible, so
+# none of it belongs in the repo. Run ./package.sh to rebuild the zip.
+dist/
+
 .claude/
